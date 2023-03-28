@@ -21,39 +21,38 @@ public class UserDetailsController {
 
 	@Autowired
 	private VowelsService vowelsService;
-	
+
 	@Autowired
 	private UserService userService;
-	
-	
+
 	@GetMapping("/getVowelAndSplCharacter/{name}")
-	public Vowels getCountOfVowelsInString(@PathVariable ("name") String name) {
+	public Vowels getCountOfVowelsInString(@PathVariable("name") String name) {
 		return vowelsService.getCountOfVowelsInString(name);
-		
+
 	}
-	
+
 	@GetMapping("/getAllUsers")
 	public List<UserDetails> getAllUsers() {
 		return userService.getAllUsers();
-		
+
 	}
-	
+
 	@PutMapping("/updateFullNameBasedOnUserName/{userName}")
-	public  List<UserDetails> updateFullName(@PathVariable ("userName") String uName) {
+	public List<UserDetails> updateFullName(@PathVariable("userName") String uName) {
 		return userService.updateFullName(uName);
 	}
-	
+
 	@PostMapping("/addUserDetails")
 	public String addUserData(@RequestBody UserDetails userDet) {
 		return userService.addUserData(userDet);
-		
+
 	}
-	
+
 	@DeleteMapping("/deleteByUserName/{uName}")
-	public List<UserDetails> deleteUserData(@PathVariable ("uName") String userName) {
+	public List<UserDetails> deleteUserData(@PathVariable("uName") String userName) {
 		System.out.println(userName);
-	return userService.deleteUserData(userName);
-		
+		return userService.deleteUserData(userName);
+
 	}
-	
+
 }

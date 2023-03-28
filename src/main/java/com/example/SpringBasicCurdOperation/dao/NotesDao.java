@@ -7,8 +7,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import com.example.SpringBasicCurdOperation.entity.Notes;
 
 public interface NotesDao extends MongoRepository<Notes, String> {
-	
-	
-	public List<Notes> getByTitleAndText(String title,String text);
+
+	public List<Notes> getByTitleAndText(String title, String text);
 
 }

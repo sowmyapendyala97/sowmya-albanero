@@ -2,111 +2,104 @@ package com.example.SpringBasicCurdOperation.service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition;
-import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.example.SpringBasicCurdOperation.dao.NotesDao;
 import com.example.SpringBasicCurdOperation.entity.Notes;
 import com.example.SpringBasicCurdOperation.exception.NotesException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
 @Service
 public class NotesService {
-	
+
 	@Autowired
 	private NotesDao notesDao;
-	
-	
+
 	MongoTemplate mongoTemplate;
-	
-	public List<Notes> createANote(Notes notes) throws NotesException{
-		List<Notes> noteList=null;
-		if(validateNotes(notes)) {
-			
-			 notes.setCreatedDate(new Date().toString());
-		//	 notes.setName(getResourceName(notes));
-			 notesDao.save(notes);
-			 noteList=notesDao.findAll();
-		}
-		else {
-			noteList=	notesDao.findAll();
-		}
-		return noteList;
-		
+
+	private HttpStatus httpStatus;
+
+	public ResponseEntity<Notes> createANote(Notes notes) throws NotesException {
+
+		notes.setCreatedDate(new Date().toString());
+		Notes createdNotes = notesDao.save(notes);
+		return new ResponseEntity<>(createdNotes, httpStatus.CREATED);
+
 	}
-	
-	
-	public List<Notes> updateANote(String id,  Notes notes){
-		
-		/*
-		 * if(validateNotes(notes)) { Query query=new Query(); if(notes.getTitle() !=
-		 * null && notes.getTitle() !=null) {
-		 * query.addCriteria(Criteria.where("title").orOperator(Criteria.where("text")))
-		 * ; }else if(notes.getName() != null){
-		 * query.addCriteria(Criteria.where("title")); }else if (notes.getTitle() !=
-		 * null) { query.addCriteria(Criteria.where("text")); } List<Notes>list=
-		 * mongoTemplate.find(query, Notes.class);
-		 * 
-		 * 
-		 * } return null;
-		 */
-		
-		if(id != null) {
-			Optional<Notes> noteOptional=notesDao.findById(id);
-			
-			if(noteOptional.isPresent()) {
-				Notes n =noteOptional.get();
-				n.setTitle(notes.getTitle());
-				n.setText(notes.getText());
-				n.setUpdatedDate(new Date().toString());
-				notesDao.save(n);
-			}
+
+	public ResponseEntity<?> updateANote(String id, Notes notes) throws NotesException {
+
+		Notes retriveNotes = notesDao.findById(id).orElse(null);
+		if (retriveNotes == null) {
+			return new ResponseEntity<>("Unable to find the Notes with ID= "+id, httpStatus.NOT_FOUND);
 		}
-	return	notesDao.findAll();
-		
+		retriveNotes.setTitle(notes.getTitle());
+		retriveNotes.setText(notes.getText());
+		retriveNotes.setUpdatedDate(new Date().toString());
+		Notes updatedNotes = notesDao.save(retriveNotes);
+		return new ResponseEntity<>(updatedNotes, httpStatus.OK);
+
 	}
 
 	@Deprecated
 	private String getResourceName(Notes notes) {
-		String resourceName=null;
-		if(notes.getTitle() != null) {
-			//notes.getTitle().c
+		String resourceName = null;
+		if (notes.getTitle() != null) {
+			// notes.getTitle().c
 		}
 		return null;
-		
-		
+
 	}
 
 	private boolean validateNotes(Notes notes) {
-	if(notes != null && (notes.getTitle()!=null || notes.getText() != null) ) {
-		return true;
-	}else {
-		return false;
-	}
+		if (notes != null && (notes.getTitle() != null || notes.getText() != null)) {
+			return true;
+		} else {
+			return false;
+		}
 
 	}
 
-
-	public List<Notes> getAllNotes() {
+	public ResponseEntity<List<Notes>> getAllNotes() {
 		// TODO Auto-generated method stub
-		return notesDao.findAll();
+		List<Notes> listOfNotes = notesDao.findAll();
+		return new ResponseEntity<List<Notes>>(listOfNotes, httpStatus.OK);
 	}
-	
-	
-	public List<Notes> deleteNote(String id){
-		
-	if(id != null) {
+
+	public ResponseEntity<?> deleteNote(String id) {
+
+		Notes retriveNotes = notesDao.findById(id).orElse(null);
+		if (retriveNotes == null) {
+			return new ResponseEntity<>("Unable to find the Notes with ID= "+id, httpStatus.NOT_FOUND);
+		}
 		notesDao.deleteById(id);
+
+		return new ResponseEntity<>("Notes deleted successfully", HttpStatus.OK);
+
 	}
-		
-		return	notesDao.findAll();
-				
-				
+
+	@ExceptionHandler(value = InvalidFormatException.class)
+	public ResponseEntity<?> handleInvalidFormatException(InvalidFormatException e) {
+		return new ResponseEntity<>("Invalid format: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+	}
+
+	// Exception handling for other exceptions
+	@ExceptionHandler(value = Exception.class)
+	public ResponseEntity<?> handleException(Exception e) {
+		return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	public ResponseEntity<?> getByID(String title) {
+		Notes retriveNotes = notesDao.findById(title).orElse(null);
+		if (retriveNotes == null) {
+			return new ResponseEntity<>("Unable to find the Notes with title= "+ title, httpStatus.NOT_FOUND);
+		}
+		return new ResponseEntity<>(retriveNotes, HttpStatus.OK);
 	}
 }
