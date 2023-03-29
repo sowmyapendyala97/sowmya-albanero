@@ -3,6 +3,8 @@ package com.example.SpringBasicCurdOperation.service;
 import java.util.Date;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,8 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 @Service
 public class NotesService {
 
+	Logger logger = LoggerFactory.getLogger(NotesService.class);
+
 	@Autowired
 	private NotesDao notesDao;
 
@@ -28,21 +32,28 @@ public class NotesService {
 	public ResponseEntity<Notes> createANote(Notes notes) throws NotesException {
 
 		notes.setCreatedDate(new Date().toString());
+		logger.debug("Create date" + notes.getCreatedDate());
 		Notes createdNotes = notesDao.save(notes);
+		logger.info("Notes Record save succesfully");
+
 		return new ResponseEntity<>(createdNotes, httpStatus.CREATED);
 
 	}
 
 	public ResponseEntity<?> updateANote(String id, Notes notes) throws NotesException {
-
+		logger.debug("Notes ID" + id);
 		Notes retriveNotes = notesDao.findById(id).orElse(null);
 		if (retriveNotes == null) {
-			return new ResponseEntity<>("Unable to find the Notes with ID= "+id, httpStatus.NOT_FOUND);
+			logger.debug("Unable to find the Notes with ID= " + id);
+
+			return new ResponseEntity<>("Unable to find the Notes with ID= " + id, httpStatus.NOT_FOUND);
 		}
 		retriveNotes.setTitle(notes.getTitle());
 		retriveNotes.setText(notes.getText());
 		retriveNotes.setUpdatedDate(new Date().toString());
 		Notes updatedNotes = notesDao.save(retriveNotes);
+		logger.info("Notes Record updated succesfully");
+
 		return new ResponseEntity<>(updatedNotes, httpStatus.OK);
 
 	}
@@ -69,6 +80,8 @@ public class NotesService {
 	public ResponseEntity<List<Notes>> getAllNotes() {
 		// TODO Auto-generated method stub
 		List<Notes> listOfNotes = notesDao.findAll();
+		logger.info("Retrieved all the Notes succesfully");
+
 		return new ResponseEntity<List<Notes>>(listOfNotes, httpStatus.OK);
 	}
 
@@ -76,9 +89,11 @@ public class NotesService {
 
 		Notes retriveNotes = notesDao.findById(id).orElse(null);
 		if (retriveNotes == null) {
-			return new ResponseEntity<>("Unable to find the Notes with ID= "+id, httpStatus.NOT_FOUND);
+			logger.debug("Unable to find the Notes with ID= " + id);
+			return new ResponseEntity<>("Unable to find the Notes with ID= " + id, httpStatus.NOT_FOUND);
 		}
 		notesDao.deleteById(id);
+		logger.info("Deleted Notes succesfully");
 
 		return new ResponseEntity<>("Notes deleted successfully", HttpStatus.OK);
 
@@ -98,7 +113,7 @@ public class NotesService {
 	public ResponseEntity<?> getByID(String title) {
 		Notes retriveNotes = notesDao.findById(title).orElse(null);
 		if (retriveNotes == null) {
-			return new ResponseEntity<>("Unable to find the Notes with title= "+ title, httpStatus.NOT_FOUND);
+			return new ResponseEntity<>("Unable to find the Notes with title= " + title, httpStatus.NOT_FOUND);
 		}
 		return new ResponseEntity<>(retriveNotes, HttpStatus.OK);
 	}
